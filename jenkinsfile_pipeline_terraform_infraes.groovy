@@ -1,24 +1,30 @@
 pipeline {
   agent any
+  environment {
+    AWS_DEFAULT_REGION = 'us-west-2'
+  }
   stages {
     stage('Checkout') {
       steps {
-        checkout scm
+        checkout scm: git(
+          branches: [[name: '*/main']],
+          extensions: [],
+          userRemoteConfigs: [[credentialsId: 'jenkins_instance', url: 'https://github.com/pato2819/ci-cd-terraform.git']]
+        )
       }
     }
     stage('Terraform Init') {
       steps {
-        sh 'terraform init'
-      }
-    }
-    stage('Terraform Plan') {
-      steps {
-        sh 'terraform plan -out=tfplan'
+        dir('terraform') {
+          sh 'terraform init'
+        }
       }
     }
     stage('Terraform Apply') {
       steps {
-        sh 'terraform apply -auto-approve tfplan'
+        dir('terraform') {
+          sh 'terraform apply -auto-approve'
+        }
       }
     }
   }
